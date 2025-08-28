@@ -1,36 +1,42 @@
 // 03-find.js
-const { MongoClient } = require("mongodb");
+// Reading docs (find)
+// --------------------
+// - find(): returns a cursor (use .toArray() to get results)
+// - findOne(): returns the first matching document or null
+// - projection: choose fields (case-sensitive field names!)
+// - if no match → find() returns empty array, findOne() returns null
 
-const uri = "mongodb://127.0.0.1:27017"; // local MongoDB
+const { MongoClient } = require("mongodb");
+const uri = "mongodb://127.0.0.1:27017";
 const client = new MongoClient(uri);
 
 async function run() {
   try {
     await client.connect();
-    console.log("✅ Connected to MongoDB");
+    console.log("✅ Connected");
 
     const db = client.db("bookstore");
     const books = db.collection("books");
 
-    // find all books
-    const allBooks = await books.find().toArray();
+    // find all (limit to 5 for demo)
+    const allBooks = await books.find().limit(5).toArray();
     console.log("📚 All books:", allBooks);
 
-    // find one book by author
+    // findOne by exact match (case-sensitive!)
+    // { author: "james clear" } will NOT match { author: "James Clear" }
     const oneBook = await books.findOne({ author: "James Clear" });
     console.log("📘 One book:", oneBook);
 
-    // projection: show only title & price
-    const projection = await books
+    // projection → include only certain fields
+    const onlyTitlePrice = await books
       .find({}, { projection: { title: 1, price: 1, _id: 0 } })
       .toArray();
-    console.log("🎯 Projection (title+price):", projection);
+    console.log("🎯 Projection (title+price):", onlyTitlePrice);
   } catch (err) {
     console.error("❌ Error:", err);
   } finally {
     await client.close();
-    console.log("🔒 Connection closed");
+    console.log("🔒 Closed");
   }
 }
-
 run();
